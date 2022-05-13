@@ -24,14 +24,14 @@ class PulsatingStarRecovery(maf.BaseMetric):
 
     Parameters
     ----------
-     filename : str
+     filenamfe : str
         Ascii file containing the light curve of pulsating star. The file must
         contain nine columns - ['time', 'Mbol', 'u_sloan','g_sloan','r_sloan','i_sloan','z_sloan','y_sloan', period] -
      dmod : float
          Distance modulus
 
      sigmaFORnoise: int
-         the number of sigma used to generate the noise for the simulated light curve. It is an integer:if 0 the lc will be not noised
+         the number of sigma used to generate the noise for the simulated light curve. It is an integer:if 0 the itting will be not noised
 
      do_remove_saturated :boolean (True, False)
           true if you want to remove from the plots the saturated visits (computed with saturation_stacker)
@@ -43,6 +43,8 @@ class PulsatingStarRecovery(maf.BaseMetric):
           fraction of the size of the largest gap in the phase distribution  that is used to calculate numberGaps_X (see LcSampling)
 
         df came from lsst_sim.simdr2 and contains  magnitudes of the nearest stars (see query inn the notebook .If is empty no effect of blend is considered, see Notebook)
+
+        plot_key if you want figures set to yes else to no
 
         and use/rename these columns of Opsim:
         mjdCol = observationStartMJD
@@ -58,8 +60,9 @@ class PulsatingStarRecovery(maf.BaseMetric):
 
 
 
+
     """
-    def __init__(self,filename,dmod,sigmaFORnoise,do_remove_saturated,numberOfHarmonics,factorForDimensionGap,df,mjdCol='observationStartMJD',fiveSigmaDepth='fiveSigmaDepth',filters= 'filter', night='night',visitExposureTime='visitExposureTime',skyBrightness='skyBrightness', numExposures='numExposures', seeing='seeingFwhmEff',airmass='airmass',**kwargs):
+    def __init__(self,filename,sigmaFORnoise,do_remove_saturated,numberOfHarmonics,factorForDimensionGap,df,plot_key,mjdCol='observationStartMJD',fiveSigmaDepth='fiveSigmaDepth',filters= 'filter', night='night',visitExposureTime='visitExposureTime',skyBrightness='skyBrightness', numExposures='numExposures', seeing='seeingFwhmEff',airmass='airmass',**kwargs):
 
 
 
@@ -74,12 +77,13 @@ class PulsatingStarRecovery(maf.BaseMetric):
         self.seeing=seeing
         self.airmass=airmass
 
-        self.dmod=dmod
+
         self.sigmaFORnoise=sigmaFORnoise
         self.do_remove_saturated=do_remove_saturated
         self.numberOfHarmonics=numberOfHarmonics
         self.factorForDimensionGap=factorForDimensionGap
         self.df=df
+        self.plot_key=plot_key
 
 
 
@@ -94,14 +98,97 @@ class PulsatingStarRecovery(maf.BaseMetric):
 
         super().__init__(col=cols, maps=maps, units='#', **kwargs, metricName="PulsatingStarRecovery_XLynne_blend", metricDtype="object")
 
-
+    def init_output(self):
+        output_metric={ 'n_u':0,
+                        'n_g':0,
+                        'n_r':0,
+                        'n_i':0,
+                        'n_z':0,
+                        'n_y':0,
+                        'maxGap_u': 0.0,
+                        'maxGap_g': 0.0,
+                        'maxGap_r': 0.0,
+                        'maxGap_i': 0.0,
+                        'maxGap_z': 0.0,
+                        'maxGap_y': 0.0,
+                        'numberGaps_u': 0,
+                        'numberGaps_g': 0,
+                        'numberGaps_r': 0,
+                        'numberGaps_i': 0,
+                        'numberGaps_z': 0,
+                        'numberGaps_y': 0,
+                        'uniformity_u': 0.0,
+                        'uniformity_g': 0.0,
+                        'uniformity_r': 0.0,
+                        'uniformity_i': 0.0,
+                        'uniformity_z': 0.0,
+                        'uniformity_y': 0.0,
+                        'uniformityKS_u': 0.0,
+                        'uniformityKS_g': 0.0,
+                        'uniformityKS_r': 0.0,
+                        'uniformityKS_i': 0.0,
+                        'uniformityKS_z': 0.0,
+                        'uniformityKS_y': 0.0,
+                        'P_gatpsy': 0.0,
+                        'Delta_Period': 0.0,
+                        'Delta_Period_abs': 0.0,
+                        'Delta_Period_abs_cicli': 0.0,
+                        'deltamag_u': 0.0,
+                        'deltamag_g': 0.0,
+                        'deltamag_r': 0.0,
+                        'deltamag_i': 0.0,
+                        'deltamag_z': 0.0,
+                        'deltamag_y': 0.0,
+                        'deltaamp_u': 0.0,
+                        'deltaamp_g': 0.0,
+                        'deltaamp_r': 0.0,
+                        'deltaamp_i': 0.0,
+                        'deltaamp_z': 0.0,
+                        'deltaamp_y': 0.0,
+                        'chi_u': 0.0,
+                        'chi_g': 0.0,
+                        'chi_r': 0.0,
+                        'chi_i': 0.0,
+                        'chi_z': 0.0,
+                        'chi_y': 0.0,
+                        'P_gatpsy_blend': 0.0,
+                        'Delta_Period_blend': 0.0,
+                        'Delta_Period_abs_blend': 0.0,
+                        'Delta_Period_abs_cicli_blend': 0.0,
+                        'deltamag_u_blend': 0.0,
+                        'deltamag_g_blend': 0.0,
+                        'deltamag_r_blend': 0.0,
+                        'deltamag_i_blend': 0.0,
+                        'deltamag_z_blend': 0.0,
+                        'deltamag_y_blend': 0.0,
+                        'deltaamp_u_blend': 0.0,
+                        'deltaamp_g_blend': 0.0,
+                        'deltaamp_r_blend': 0.0,
+                        'deltaamp_i_blend': 0.0,
+                        'deltaamp_z_blend': 0.0,
+                        'deltaamp_y_blend': 0.0,
+                        'chi_u_blend': 0.0,
+                        'chi_g_blend': 0.0,
+                        'chi_r_blend': 0.0,
+                        'chi_i_blend': 0.0,
+                        'chi_z_blend': 0.0,
+                        'chi_y_blend': 0.0,
+                        'fittingParametersAllband': 0.0
+                      }
+        return output_metric
 
     def run(self, dataSlice,slicePoint=None):
 
-
+        output_null_metric = self.init_output()
 
         #the function 'ReadTeoSim' puts the pulsating star at distance=dmod+Ax/Av*3.1*slicePoint('ebv').Gives a dictionary
         ebv1=slicePoint['ebv']
+        dmod=5*np.log10(slicePoint['distance']*10**6) - 5
+        print(' distance=, ebv=, e dmod=' )
+        print(slicePoint['distance'])
+        print(ebv1)
+        print(dmod)
+
 
 
 
@@ -115,7 +202,7 @@ class PulsatingStarRecovery(maf.BaseMetric):
 
 
 
-        lcModel_noblend=self.ReadTeoSim(self.lcModel_ascii,self.dmod,ebv1)
+        lcModel_noblend=self.ReadTeoSim(self.lcModel_ascii,dmod,ebv1)
 
 
 
@@ -139,15 +226,22 @@ class PulsatingStarRecovery(maf.BaseMetric):
 
         #define time_lsst as array and filter
         time_lsst=np.asarray(mv['observationStartMJD']+mv['visitExposureTime']/2.)
+        day_lsst=np.asarray(mv['observationStartMJD']-min(mv['observationStartMJD']))
+        day_lsst_sort=np.sort(day_lsst)
         filters_lsst=np.asarray(mv['filter'])
+        detlimLSST=np.asarray(mv['fiveSigmaDepth'])
+        #print(day_lsst_sort)
 
+        #
+        if len(time_lsst) < 5:
+            return output_null_metric
 
         #################################################
         # The following not consider the blend.
         #################################################
 
          #the function self.generateLC generate the temporal series and simulate light curve
-        LcTeoLSST=self.generateLC(time_lsst,filters_lsst,lcModel_noblend)
+        LcTeoLSST=self.generateLC(detlimLSST,time_lsst,filters_lsst,lcModel_noblend)
 
         #the function 'noising' compute and add errors
         snr=self.retrieveSnR(mv,lcModel_noblend)
@@ -158,6 +252,12 @@ class PulsatingStarRecovery(maf.BaseMetric):
         index_notsaturated,saturation_index,detection_index=self.count_saturation(mv,snr,LcTeoLSST,LcTeoLSST_noised,self.do_remove_saturated)
 
 
+        #if self.df.empty:
+        #          output_metric_anal=self.outputforplotanal(mv,lcModel_noblend)
+
+        #return output_metric_anal
+
+
         #The function 'Lcsampling' analize the sampling of the simulated light curve. Give a dictionary with UniformityPrameters obtained with three different methods
         #1) for each filter X calculates the number of points (n_X), the size in phase of the largest gap (maxGap_X) and the number of gaps largest than factorForDimensionGap*maxGap_X (numberGaps_X)
         #2) the uniformity parameters from Barry F. Madore and Wendy L. Freedman 2005 ApJ 630 1054 (uniformity_X)  useful for n_X<20
@@ -166,18 +266,52 @@ class PulsatingStarRecovery(maf.BaseMetric):
         period_model=LcTeoLSST['p_model']
         uni_meas=self.Lcsampling(LcTeoLSST_noised,period_model,index_notsaturated,self.factorForDimensionGap)
 
+
+        if self.plot_key=='yes' :
+            self.plotting_SimulatedLC(lcModel_noblend['phase'],lcModel_noblend['u'],lcModel_noblend['phase'],
+                                         lcModel_noblend['g'],lcModel_noblend['phase'],lcModel_noblend['r'],
+                                         lcModel_noblend['phase'],lcModel_noblend['i'],lcModel_noblend['phase'],
+                                         lcModel_noblend['z'],lcModel_noblend['phase'],lcModel_noblend['y'],
+                                         LcTeoLSST_noised['phaseu'],LcTeoLSST_noised['magu'],
+                                         LcTeoLSST_noised['phaseg'],LcTeoLSST_noised['magg'],
+                                         LcTeoLSST_noised['phaser'],LcTeoLSST_noised['magr'],
+                                         LcTeoLSST_noised['phasei'],LcTeoLSST_noised['magi'],
+                                         LcTeoLSST_noised['phasez'],LcTeoLSST_noised['magz'],
+                                         LcTeoLSST_noised['phasey'],LcTeoLSST_noised['magy'],
+                                         snr['u'],snr['g'],snr['r'],snr['i'],snr['z'],snr['y'],
+                                         index_notsaturated)
+            self.plotting_SimulatedLC_nonoise(lcModel_noblend['phase'],lcModel_noblend['u'],
+                                         lcModel_noblend['phase'],
+                                         lcModel_noblend['g'],lcModel_noblend['phase'],lcModel_noblend['r'],
+                                         lcModel_noblend['phase'],lcModel_noblend['i'],lcModel_noblend['phase'],
+                                         lcModel_noblend['z'],lcModel_noblend['phase'],lcModel_noblend['y'],
+                                         LcTeoLSST_noised['phaseu'],LcTeoLSST['magu'],
+                                         LcTeoLSST_noised['phaseg'],LcTeoLSST['magg'],
+                                         LcTeoLSST_noised['phaser'],LcTeoLSST['magr'],
+                                         LcTeoLSST_noised['phasei'],LcTeoLSST['magi'],
+                                         LcTeoLSST_noised['phasez'],LcTeoLSST['magz'],
+                                         LcTeoLSST_noised['phasey'],LcTeoLSST['magy'],
+                                         snr['u'],snr['g'],snr['r'],snr['i'],snr['z'],snr['y'],
+                                         index_notsaturated)
+
         #the function 'LcPeriod' analyse the periodogram with Gatspy and gives:
         #1)the best period (best_per_temp)
         #2)the difference between the recovered period and the  model's period(P) and
         #3)diffper_abs=(DeltaP/P)*100
         #4)diffcicli= DeltaP/P*1/number of cycle
-        best_per_temp,diffper,diffper_abs,diffcicli=self.LcPeriodLight(mv,LcTeoLSST,LcTeoLSST_noised,index_notsaturated)
+        #best_per_temp,diffper,diffper_abs,diffcicli=self.LcPeriodLight(mv,LcTeoLSST,LcTeoLSST_noised,index_notsaturated)
+
+        if self.plot_key=='yes':
+            best_per_temp,diffper,diffper_abs,diffcicli=self.LcPeriod_withfigure(mv,LcTeoLSST,LcTeoLSST_noised,index_notsaturated)
+        else:
+            best_per_temp,diffper,diffper_abs,diffcicli=self.LcPeriodLight(mv,LcTeoLSST,LcTeoLSST_noised,index_notsaturated)
         period=best_per_temp #or period_model or fitLS_multi.best_period
         #period=LcTeoLSST['p_model']
 
         #The function 'LcFitting' fit the simulated light curve with number of harmonics=numberOfHarmonics.Return a dictionary with mean magnitudes, amplitudes and chi of the fits
 
-        finalResult=self.LcFitting(LcTeoLSST_noised,index_notsaturated,period,self.numberOfHarmonics)
+        finalResult=self.LcFitting(LcTeoLSST_noised,index_notsaturated,period,self.numberOfHarmonics,self.plot_key)
+
 
         #Some useful figure of merit on the recovery of the:
         #and shape.Difference between observed and derived mean magnitude (after fitting the light curve)
@@ -197,23 +331,27 @@ class PulsatingStarRecovery(maf.BaseMetric):
         # Chi of the fit-->finalResult['chi_u']....
 
         if self.df.empty:
-            output_metric={'n_u':uni_meas['n_u'],'n_g':uni_meas['n_g'],'n_r':uni_meas['n_r'],'n_i':uni_meas['n_i'],'n_z':uni_meas['n_z'],'n_y':uni_meas['n_y'],
-                'maxGap_u':uni_meas['maxGap_u'],'maxGap_g':uni_meas['maxGap_g'],'maxGap_r':uni_meas['maxGap_r'],'maxGap_i':uni_meas['maxGap_i'],'maxGap_z':uni_meas['maxGap_z'],'maxGap_y':uni_meas['maxGap_y'],
-                'numberGaps_u':uni_meas['numberGaps_u'],'numberGaps_g':uni_meas['numberGaps_g'],'numberGaps_r':uni_meas['numberGaps_r'],
-                'numberGaps_i':uni_meas['numberGaps_i'],'numberGaps_z':uni_meas['numberGaps_z'],'numberGaps_y':uni_meas['numberGaps_y'],
-                'uniformity_u':uni_meas['uniformity_u'],'uniformity_g':uni_meas['uniformity_g'],'uniformity_r':uni_meas['uniformity_r'],
-                'uniformity_i':uni_meas['uniformity_i'],'uniformity_z':uni_meas['uniformity_z'],'uniformity_y':uni_meas['uniformity_y'],
-                'uniformityKS_u':uni_meas['uniformityKS_u'],'uniformityKS_g':uni_meas['uniformityKS_g'],'uniformityKS_r':uni_meas['uniformityKS_r'],
-                'uniformityKS_i':uni_meas['uniformityKS_i'],'uniformityKS_z':uni_meas['uniformityKS_z'],'uniformityKS_y':uni_meas['uniformityKS_y'],
-                'P_gatpsy':best_per_temp,'Delta_Period':diffper,'Delta_Period_abs':diffper_abs,'Delta_Period_abs_cicli':diffcicli,
-                'deltamag_u':deltamag_u,'deltamag_g':deltamag_g,'deltamag_r':deltamag_r,'deltamag_i':deltamag_i,'deltamag_z':deltamag_z,'deltamag_y':deltamag_y,
-                'deltaamp_u':deltaamp_u, 'deltaamp_g':deltaamp_g,'deltaamp_r':deltaamp_r,'deltaamp_i':deltaamp_i,'deltaamp_z':deltaamp_z,'deltaamp_y':deltaamp_y,
-                'chi_u':finalResult['chi_u'],'chi_g':finalResult['chi_g'],'chi_r':finalResult['chi_r'],'chi_i':finalResult['chi_i'],'chi_z':finalResult['chi_z'],'chi_y':finalResult['chi_y']}
+                  output_metric=self.output_rachel(uni_meas,best_per_temp,diffper,
+                                            diffper_abs,diffcicli,deltamag_u,deltamag_g,deltamag_r,deltamag_i,
+                                            deltamag_z,deltamag_y,deltaamp_u,deltaamp_g,deltaamp_r,deltaamp_i,
+                                            deltaamp_z,deltaamp_y,finalResult,LcTeoLSST_noised,index_notsaturated,lcModel_noblend,LcTeoLSST)
+#            output_metric={'n_u':uni_meas['n_u'],'n_g':uni_meas['n_g'],'n_r':uni_meas['n_r'],'n_i':uni_meas['n_i'],'n_z':uni_meas['n_z'],'n_y':uni_meas['n_y'],
+#                'maxGap_u':uni_meas['maxGap_u'],'maxGap_g':uni_meas['maxGap_g'],'maxGap_r':uni_meas['maxGap_r'],'maxGap_i':uni_meas['maxGap_i'],'maxGap_z':uni_meas['maxGap_z'],'maxGap_y':uni_meas['maxGap_y'],
+#                'numberGaps_u':uni_meas['numberGaps_u'],'numberGaps_g':uni_meas['numberGaps_g'],'numberGaps_r':uni_meas['numberGaps_r'],
+#                'numberGaps_i':uni_meas['numberGaps_i'],'numberGaps_z':uni_meas['numberGaps_z'],'numberGaps_y':uni_meas['numberGaps_y'],
+#                'uniformity_u':uni_meas['uniformity_u'],'uniformity_g':uni_meas['uniformity_g'],'uniformity_r':uni_meas['uniformity_r'],
+#                'uniformity_i':uni_meas['uniformity_i'],'uniformity_z':uni_meas['uniformity_z'],'uniformity_y':uni_meas['uniformity_y'],
+#                'uniformityKS_u':uni_meas['uniformityKS_u'],'uniformityKS_g':uni_meas['uniformityKS_g'],'uniformityKS_r':uni_meas['uniformityKS_r'],
+#                'uniformityKS_i':uni_meas['uniformityKS_i'],'uniformityKS_z':uni_meas['uniformityKS_z'],'uniformityKS_y':uni_meas['uniformityKS_y'],
+#                'P_gatpsy':best_per_temp,'Delta_Period':diffper,'Delta_Period_abs':diffper_abs,'Delta_Period_abs_cicli':diffcicli,
+        #'deltamag_u':deltamag_u,'deltamag_g':deltamag_g,'deltamag_r':deltamag_r,'deltamag_i':deltamag_i,'deltamag_z':deltamag_z,'deltamag_y':deltamag_y,
+ #               'deltaamp_u':deltaamp_u, #'deltaamp_g':deltaamp_g,'deltaamp_r':deltaamp_r,'deltaamp_i':deltaamp_i,'deltaamp_z':deltaamp_z,'deltaamp_y':deltaamp_y,
+               # 'chi_u':finalResult['chi_u'],'chi_g':finalResult['chi_g'],'chi_r':finalResult['chi_r'],'chi_i':finalResult['chi_i'],'chi_z':finalResult['chi_z'],'chi_y':finalResult['chi_y'],'fittingParametersAllband':finalResult['fittingParametersAllband']}
         else:
-            lcModel_blend=self.ReadTeoSim_blend(self.df,self.lcModel_ascii,self.dmod,ebv1)
+            lcModel_blend=self.ReadTeoSim_blend(self.df,self.lcModel_ascii,dmod,ebv1)
 
 
-            LcTeoLSST_blend=self.generateLC(time_lsst,filters_lsst,lcModel_blend)
+            LcTeoLSST_blend=self.generateLC(detlimLSST,time_lsst,filters_lsst,lcModel_blend)
 
         #the function 'noising' compute and add errors
             snr_blend=self.retrieveSnR(mv,lcModel_blend)
@@ -221,7 +359,7 @@ class PulsatingStarRecovery(maf.BaseMetric):
 
 
         #the function 'count_saturation' build an index to exclude saturated stars and those under detection limit.
-            index_notsaturated,saturation_index,detection_index=self.count_saturation(mv,snr_blend,LcTeoLSST_blend,LcTeoLSST_noised_blend,self.do_remove_saturated)
+            index_notsaturated_blend,saturation_index_blend,detection_index_blend=self.count_saturation(mv,snr_blend,LcTeoLSST_blend,LcTeoLSST_noised_blend,self.do_remove_saturated)
 
 
         #The function 'Lcsampling' analize the sampling of the simulated light curve. Give a dictionary with UniformityPrameters obtained with three different methods
@@ -230,20 +368,20 @@ class PulsatingStarRecovery(maf.BaseMetric):
         #3) a modified version of UniformityMetric by Peter Yoachim (https://sims-maf.lsst.io/_modules/lsst/sims/maf/metrics/cadenceMetrics.html#UniformityMetric.run). Calculate how uniformly the observations are spaced in phase (not time)using KS test.Returns a value between 0 (uniform sampling) and 1 . uniformityKS_X
 
             period_model_blend=LcTeoLSST_blend['p_model']
-            uni_meas_blend=self.Lcsampling(LcTeoLSST_noised_blend,period_model_blend,index_notsaturated,self.factorForDimensionGap)
+            uni_meas_blend=self.Lcsampling(LcTeoLSST_noised_blend,period_model_blend,index_notsaturated_blend,self.factorForDimensionGap)
 
         #the function 'LcPeriod' analyse the periodogram with Gatspy and gives:
         #1)the best period (best_per_temp)
         #2)the difference between the recovered period and the  model's period(P) and
         #3)diffper_abs=(DeltaP/P)*100
         #4)diffcicli= DeltaP/P*1/number of cycle
-            best_per_temp_blend,diffper_blend,diffper_abs_blend,diffcicli_blend=self.LcPeriodLight(mv,LcTeoLSST_blend,LcTeoLSST_noised_blend,index_notsaturated)
+            best_per_temp_blend,diffper_blend,diffper_abs_blend,diffcicli_blend=self.LcPeriodLight(mv,LcTeoLSST_blend,LcTeoLSST_noised_blend,index_notsaturated_blend)
             period_blend=best_per_temp_blend #or period_model or fitLS_multi.best_period
         #period=LcTeoLSST['p_model']
 
         #The function 'LcFitting' fit the simulated light curve with number of harmonics=numberOfHarmonics.Return a dictionary with mean magnitudes, amplitudes and chi of the fits
 
-            finalResult_blend=self.LcFitting(LcTeoLSST_noised_blend,index_notsaturated,period_blend,self.numberOfHarmonics)
+            finalResult_blend=self.LcFitting(LcTeoLSST_noised_blend,index_notsaturated_blend,period_blend,self.numberOfHarmonics)
 
         #Some useful figure of merit on the recovery of the:
         #and shape.Difference between observed and derived mean magnitude (after fitting the light curve)
@@ -278,97 +416,14 @@ class PulsatingStarRecovery(maf.BaseMetric):
                 'P_gatpsy_blend':best_per_temp_blend,'Delta_Period_blend':diffper_blend,'Delta_Period_abs_blend':diffper_abs_blend,'Delta_Period_abs_cicli_blend':diffcicli_blend,
                 'deltamag_u_blend':deltamag_u_blend,'deltamag_g_blend':deltamag_g_blend,'deltamag_r_blend':deltamag_r_blend,'deltamag_i_blend':deltamag_i_blend,'deltamag_z_blend':deltamag_z_blend, 'deltamag_y_blend':deltamag_y_blend,
                 'deltaamp_u_blend':deltaamp_u_blend,'deltaamp_g_blend':deltaamp_g_blend,'deltaamp_r_blend':deltaamp_r_blend,'deltaamp_i_blend':deltaamp_i_blend,'deltaamp_z_blend':deltaamp_z_blend,'deltaamp_y_blend':deltaamp_y_blend,
-                'chi_u_blend':finalResult_blend['chi_u'],'chi_g_blend':finalResult_blend['chi_g'],'chi_r_blend':finalResult_blend['chi_r'],'chi_i_blend':finalResult_blend['chi_i'],'chi_z_blend':finalResult_blend['chi_z'],'chi_y_blend':finalResult_blend['chi_y'],
+                'chi_u_blend':finalResult_blend['chi_u'],'chi_g_blend':finalResult_blend['chi_g'],'chi_r_blend':finalResult_blend['chi_r'],'chi_i_blend':finalResult_blend['chi_i'],'chi_z_blend':finalResult_blend['chi_z'],'chi_y_blend':finalResult_blend['chi_y'],'fittingParametersAllband':finalResult_blend['fittingParametersAllband']
 
                           }
         return output_metric
 
 
-    def reduceP_gatpsy(self, metricValue):
-        return metricValue['P_gatpsy']
-
-    def get_deltamag_u(self,metricValue):
-        return metricValue['deltamag_u']
-    def get_deltaamp_u(self,metricValue):
-        return metricValue['deltaamp_u']
-    def get_chi_u(self,metricValue):
-        return metricValue['chi_u']
-    def get_deltamag_g(self,metricValue):
-        return metricValue['deltamag_g']
-    def get_deltaamp_g(self,metricValue):
-        return metricValue['deltaamp_g']
-    def get_chi_g(self,metricValue):
-        return metricValue['chi_g']
-
-    def get_deltamag_r(self,metricValue):
-        return metricValue['deltamag_r']
-    def get_deltaamp_r(self,metricValue):
-        return metricValue['deltaamp_r']
-    def get_chi_r(self,metricValue):
-        return metricValue['chi_r']
-    def get_deltamag_i(self,metricValue):
-        return metricValue['deltamag_i']
-    def get_deltaamp_i(self,metricValue):
-        return metricValue['deltaamp_i']
-    def get_chi_i(self,metricValue):
-        return metricValue['chi_i']
-    def get_deltamag_z(self,metricValue):
-        return metricValue['deltamag_z']
-    def get_deltaamp_z(self,metricValue):
-        return metricValue['deltaamp_z']
-    def get_chi_z(self,metricValue):
-        return metricValue['chi_z']
-    def get_deltamag_y(self,metricValue):
-        return metricValue['deltamag_y']
-    def get_deltaamp_y(self,metricValue):
-        return metricValue['deltaamp_y']
-    def get_chi_y(self,metricValue):
-        return metricValue['chi_y']
-
-    def get_P_gatpsy_blend(self, metricValue):
-        return metricValue['P_gatpsy_blend']
-
-    def get_deltamag_u_blend(self,metricValue):
-        return metricValue['deltamag_u_blend']
-    def get_deltaamp_u_blend(self,metricValue):
-        return metricValue['deltaamp_u_blend']
-    def get_chi_u_blend(self,metricValue):
-        return metricValue['chi_u_blend']
-
-    def get_deltamag_g_blend(self,metricValue):
-        return metricValue['deltamag_g_blend']
-    def get_deltaamp_g_blend(self,metricValue):
-        return metricValue['deltaamp_g_blend']
-    def get_chi_g_blend(self,metricValue):
-        return metricValue['chi_g_blend']
-
-    def get_deltamag_r_blend(self,metricValue):
-        return metricValue['deltamag_r_blend']
-    def get_deltaamp_r_blend(self,metricValue):
-        return metricValue['deltaamp_r_blend']
-    def get_chi_r_blend(self,metricValue):
-        return metricValue['chi_r_blend']
-
-    def get_deltamag_i_blend(self,metricValue):
-        return metricValue['deltamag_i_blend']
-    def get_deltaamp_i_blend(self,metricValue):
-        return metricValue['deltaamp_i_blend']
-    def get_chi_i_blend(self,metricValue):
-        return metricValue['chi_i_blend']
-
-    def get_deltamag_z_blend(self,metricValue):
-        return metricValue['deltamag_z_blend']
-    def get_deltaamp_z_blend(self,metricValue):
-        return metricValue['deltaamp_z_blend']
-    def get_chi_z_blend(self,metricValue):
-        return metricValue['chi_z_blend']
-
-    def get_deltamag_y_blend(self,metricValue):
-        return metricValue['deltamag_y_blend']
-    def get_deltaamp_y_blend(self,metricValue):
-        return metricValue['deltaamp_y_blend']
-    def get_chi_y_blend(self,metricValue):
-        return metricValue['chi_y_blend']
+#    def reduceP_gatpsy(self, metricValue):
+#        return metricValue['meany_model']
 
 
 
@@ -471,17 +526,17 @@ class PulsatingStarRecovery(maf.BaseMetric):
         time_0=time_model[0]
 
         for i in range(len(u_mod)):
-            u_model.append(u_mod[i]+dmod+1.55607*3.1*ebv)
+            u_model.append(u_mod[i]+dmod+1.55698*3.1*ebv)
         for i in range(len(g_mod)):
-            g_model.append(g_mod[i]+dmod+1.18379*3.1*ebv)
+            g_model.append(g_mod[i]+dmod+1.17450*3.1*ebv)
         for i in range(len(r_mod)):
-            r_model.append(r_mod[i]+dmod+0.87075*3.1*ebv)
+            r_model.append(r_mod[i]+dmod+0.86666*3.1*ebv)
         for i in range(len(i_mod)):
-            i_model.append(i_mod[i]+dmod+0.67897*3.1*ebv)
+            i_model.append(i_mod[i]+dmod+0.67638*3.1*ebv)
         for i in range(len(z_mod)):
-            z_model.append(z_mod[i]+dmod+0.51683*3.1*ebv)
+            z_model.append(z_mod[i]+dmod+0.51614*3.1*ebv)
         for i in range(len(y_mod)):
-            y_model.append(y_mod[i]+dmod+0.42839*3.1*ebv)
+            y_model.append(y_mod[i]+dmod+0.42545*3.1*ebv)
 
 
 #compute the intensity means
@@ -644,7 +699,7 @@ class PulsatingStarRecovery(maf.BaseMetric):
         return output
 
 
-    def generateLC(self,time_lsst,filters_lsst,output_ReadLCTeo,period_true=-99,
+    def generateLC(self,detlimLSST,time_lsst,filters_lsst,output_ReadLCTeo,period_true=-99,
                    ampl_true=1.,phase_true=0.,do_normalize=False):
         """
         Generate the observed teporal series and light curve from teplate  and opsim
@@ -709,7 +764,7 @@ class PulsatingStarRecovery(maf.BaseMetric):
             model_z=interp1d(phase_model,mags_model_norm[4])
             model_y=interp1d(phase_model,mags_model_norm[5])
         else:
-            print(len(phase_model), len(u_model))
+
             model_u=interp1d(phase_model,u_model)
             model_g=interp1d(phase_model,g_model)
             model_r=interp1d(phase_model,r_model)
@@ -734,6 +789,20 @@ class PulsatingStarRecovery(maf.BaseMetric):
         timeLSSTi=time_lsst[ind_i]
         timeLSSTz=time_lsst[ind_z]
         timeLSSTy=time_lsst[ind_y]
+
+        detlimLSSTu=detlimLSST[ind_u]
+        detlimLSSTg=detlimLSST[ind_g]
+        detlimLSSTr=detlimLSST[ind_r]
+        detlimLSSTi=detlimLSST[ind_i]
+        detlimLSSTz=detlimLSST[ind_z]
+        detlimLSSTy=detlimLSST[ind_y]
+
+        meandetlimLSSTu=np.mean(detlimLSSTu)
+        meandetlimLSSTg=np.mean(detlimLSSTg)
+        meandetlimLSSTr=np.mean(detlimLSSTr)
+        meandetlimLSSTi=np.mean(detlimLSSTi)
+        meandetlimLSSTz=np.mean(detlimLSSTz)
+        meandetlimLSSTy=np.mean(detlimLSSTy)
 
         magLSSTu=np.empty(len(ind_u))
         magLSSTg=np.empty(len(ind_g))
@@ -793,7 +862,7 @@ class PulsatingStarRecovery(maf.BaseMetric):
                'phasei':phaselsst_i,'phasez':phaselsst_z,'phasey':phaselsst_y,
                'mag_all':mag_all,'phase_all':phase_all,'time_all':time_all,
                'ind_u':ind_u,'ind_g':ind_g,'ind_r':ind_r,
-               'ind_i':ind_i,'ind_z':ind_z,'ind_y':ind_y,'p_model':period_final}
+               'ind_i':ind_i,'ind_z':ind_z,'ind_y':ind_y,'p_model':period_final, 'meandetlimLSSTu':meandetlimLSSTu,'meandetlimLSSTg':meandetlimLSSTg,'meandetlimLSSTr':meandetlimLSSTr,'meandetlimLSSTi':meandetlimLSSTi,'meandetlimLSSTz':meandetlimLSSTz,'meandetlimLSSTy':meandetlimLSSTy}
 
 
     def retrieveSnR(self,mv,theoreticModel):
@@ -830,15 +899,32 @@ class PulsatingStarRecovery(maf.BaseMetric):
     #noising
         def noisingBand(timeLSSTteo,magLSSTteo,snr,sigma,blend=0):
             magNoised=[]
-            for j in range(len(timeLSSTteo)):
-                dmag = 2.5*np.log10(1.+1./snr[j])
-                if blend >0:
-                    dmag=np.sqrt(2)*dmag
-                noise = np.random.uniform(-sigma,sigma)*dmag
-                magNoisedComp=magLSSTteo[j]+noise
-                magNoised.append(magNoisedComp)
+            noise=[]
+            dmag=[]
+            magNoisedComp=[]
+            try:
+                for j in range(len(timeLSSTteo)):
+                    if blend >0:
+                        dmag.append(np.sqrt(2)*(2.5*np.log10(1.+1./snr[j])))
+                    else:
+                        dmag.append(2.5*np.log10(1.+1./snr[j]))
+                    noise.append(np.random.uniform(-sigma,sigma)*dmag[j])
+                    magNoisedComp=magLSSTteo[j]+noise[j]
+                    magNoised.append(magNoisedComp)
+            except:
+                for i in range(len(timeLSSTteo)):
+                    magNoised.append(999)
+                    dmag.append(999)
+                    noise.append(999)
+
 
             return magNoised, noise ,dmag
+        magNoisedu,noiseu,dmagu=[],[],[]
+        magNoisedg,noiseg,dmagg=[],[],[]
+        magNoisedr,noiser,dmagr=[],[],[]
+        magNoisedi,noisei,dmagi=[],[],[]
+        magNoisedz,noisez,dmagz=[],[],[]
+        magNoisedy,noisey,dmagy=[],[],[]
 
         magNoisedu,noiseu,dmagu=noisingBand(LcTeoLSST['timeu'],LcTeoLSST['magu'],snr['u'],sigma,perc_blend[0])
         magNoisedg,noiseg,dmagg=noisingBand(LcTeoLSST['timeg'],LcTeoLSST['magg'],snr['g'],sigma,perc_blend[1])
@@ -846,6 +932,7 @@ class PulsatingStarRecovery(maf.BaseMetric):
         magNoisedi,noisei,dmagi=noisingBand(LcTeoLSST['timei'],LcTeoLSST['magi'],snr['i'],sigma,perc_blend[3])
         magNoisedz,noisez,dmagz=noisingBand(LcTeoLSST['timez'],LcTeoLSST['magz'],snr['z'],sigma,perc_blend[4])
         magNoisedy,noisey,dmagy=noisingBand(LcTeoLSST['timey'],LcTeoLSST['magy'],snr['y'],sigma,perc_blend[5])
+
 
         #mag_all è ordinato come time_lsst
         mag_all=np.empty(len(LcTeoLSST['mag_all']))
@@ -982,6 +1069,8 @@ class PulsatingStarRecovery(maf.BaseMetric):
             detection_index_y[i]=1
         detection_index={'u':detection_index_u,'g':detection_index_g,'r':detection_index_r,'i':detection_index_i,'z':detection_index_z,'y':detection_index_y}
         return index_notsaturated,saturation_index,detection_index
+
+
 
 
 
@@ -1144,7 +1233,6 @@ class PulsatingStarRecovery(maf.BaseMetric):
 
 
         #########This is to measure the noise of the periodogramm but is not used yet
-
         LS_multi = periodic.LombScargleMultiband(Nterms_base=1, Nterms_band=0)
         LS_multi.fit(LcTeoLSST_noised['time_all'][index_notsaturated['ind_notsaturated_all']],LcTeoLSST_noised['mag_all'][index_notsaturated['ind_notsaturated_all']],LcTeoLSST_noised['dmag_all'][index_notsaturated['ind_notsaturated_all']], mv['filter'][index_notsaturated['ind_notsaturated_all']])
         P_multi = LS_multi.periodogram(periods)
@@ -1170,14 +1258,7 @@ class PulsatingStarRecovery(maf.BaseMetric):
         diffper=best_per_temp-period_model
         diffper_abs=abs(best_per_temp-period_model)/period_model*100
         diffcicli=abs(best_per_temp-period_model)/period_model*1/cicli
-#        print(' Period of the model:')
-#        print(period_model)
-#        print(' Period found by Gatpy:')
-#        print(best_per_temp)
-#        print(' DeltaP/P (in perc):')
-#        print(diffper)
-#        print(' DeltaP/P*1/number of cycle:')
-#        print(diffcicli)
+
 #
 
 
@@ -1186,7 +1267,7 @@ class PulsatingStarRecovery(maf.BaseMetric):
 
 
 
-    def LcFitting(self,data,index,period,numberOfHarmonics):
+    def LcFitting(self,data,index,period,numberOfHarmonics,plot_key):
         """
         Fit of the light curve and gives a dictionary with the mean amplitudes and magnitudes of the
         fitting curve
@@ -1200,54 +1281,57 @@ class PulsatingStarRecovery(maf.BaseMetric):
 
         print('fitting...')
         fitting=self.computingLcModel(data,period,numberOfHarmonics,index)
-        timeForModel=np.arange(data['timeu'][0],data['timeu'][0]+2*period,0.01)
+        #timeForModel=np.arange(data['timeu'][0],data['timeu'][0]+2*period,0.01)
         #computing the magModelFromFit
         if len(fitting['u'])>1:
+            timeForModel=np.arange(data['timeu'][0],data['timeu'][0]+2*period,0.01)
             magModelFromFit_u=self.modelToFit(timeForModel,fitting['u'])
             ampl_u=max(magModelFromFit_u)-min(magModelFromFit_u)
         else:
             magModelFromFit_u=[9999.]
             ampl_u=9999.
-        timeForModel=np.arange(data['timeg'][0],data['timeg'][0]+2*period,0.01)
+        #timeForModel=np.arange(data['timeg'][0],data['timeg'][0]+2*period,0.01)
         if len(fitting['g'])>1:
+            timeForModel=np.arange(data['timeg'][0],data['timeg'][0]+2*period,0.01)
             #magModelFromFit_g=self.modelToFit(data['timeg'],fitting['g'])
             magModelFromFit_g=self.modelToFit(timeForModel,fitting['g'])
             ampl_g=max(magModelFromFit_g)-min(magModelFromFit_g)
         else:
             magModelFromFit_g=[9999.]
             ampl_g=9999.
-        timeForModel=np.arange(data['timer'][0],data['timer'][0]+2*period,0.01)
+        #timeForModel=np.arange(data['timer'][0],data['timer'][0]+2*period,0.01)
         if len(fitting['r'])>1:
+            timeForModel=np.arange(data['timer'][0],data['timer'][0]+2*period,0.01)
             #magModelFromFit_r=modelToFit(data['timer'],fitting['r'])
             magModelFromFit_r=self.modelToFit(timeForModel,fitting['r'])
             ampl_r=max(magModelFromFit_r)-min(magModelFromFit_r)
         else:
             magModelFromFit_r=[9999.]
             ampl_r=9999.
-        timeForModel=np.arange(data['timei'][0],data['timei'][0]+2*period,0.01)
+       # timeForModel=np.arange(data['timei'][0],data['timei'][0]+2*period,0.01)
 
         if len(fitting['i'])>1:
-
+            timeForModel=np.arange(data['timei'][0],data['timei'][0]+2*period,0.01)
             magModelFromFit_i=self.modelToFit(timeForModel,fitting['i'])
 
-            if len(magModelFromFit_i)>0:
-                ampl_i=max(magModelFromFit_i)-min(magModelFromFit_i)
-            else:
-                ampl_i=9999.
+            #if len(magModelFromFit_i)>0:
+            ampl_i=max(magModelFromFit_i)-min(magModelFromFit_i)
+            #else:
+                #ampl_i=9999.
         else:
             magModelFromFit_i=[9999.]
             ampl_i=9999.
-        timeForModel=np.arange(data['timez'][0],data['timez'][0]+2*period,0.01)
+        #timeForModel=np.arange(data['timez'][0],data['timez'][0]+2*period,0.01)
         if len(fitting['z'])>1:
-
+            timeForModel=np.arange(data['timez'][0],data['timez'][0]+2*period,0.01)
             magModelFromFit_z=self.modelToFit(timeForModel,fitting['z'])
             ampl_z=max(magModelFromFit_z)-min(magModelFromFit_z)
         else:
             magModelFromFit_z=[9999.]
             ampl_z=9999.
-        timeForModel=np.arange(data['timey'][0],data['timey'][0]+2*period,0.01)
+        #timeForModel=np.arange(data['timey'][0],data['timey'][0]+2*period,0.01)
         if len(fitting['y'])>1:
-
+            timeForModel=np.arange(data['timey'][0],data['timey'][0]+2*period,0.01)
             magModelFromFit_y=self.modelToFit(timeForModel,fitting['y'])
             ampl_y=max(magModelFromFit_y)-min(magModelFromFit_y)
         else:
@@ -1264,7 +1348,8 @@ class PulsatingStarRecovery(maf.BaseMetric):
         meanMag_y=self.meanmag_antilog(magModelFromFit_y)
 
 
-
+        if self.plot_key=='yes':
+            self.plotting(data,fitting,period,zeroTimeRef)
 
 
 
@@ -1402,3 +1487,650 @@ class PulsatingStarRecovery(maf.BaseMetric):
                  'chi_g':chi_g,'chi_r':chi_r,'chi_i':chi_i,'chi_z':chi_z,'chi_y':chi_y}
 
         return results
+
+    def plotting_SimulatedLC(self,phaseModelu,magModelu,phaseModelg,magModelg,
+                  phaseModelr,magModelr,phaseModeli,magModeli,phaseModelz,magModelz,phaseModely,magModely,
+                  phaseLSSTu,magLSSTu,phaseLSSTg,magLSSTg,phaseLSSTr,magLSSTr,
+                  phaseLSSTi,magLSSTi,phaseLSSTz,magLSSTz,phaseLSSTy,magLSSTy,
+                      snru,snrg,snrr,snri,snrz,snry,index_notsaturated):
+
+        phase_sat_u=phaseLSSTu[index_notsaturated['ind_notsaturated_u']]
+        magLSST_sat_u=magLSSTu[index_notsaturated['ind_notsaturated_u']]
+
+        phase_sat_g=phaseLSSTg[index_notsaturated['ind_notsaturated_g']]
+        magLSST_sat_g=magLSSTg[index_notsaturated['ind_notsaturated_g']]
+
+        phase_sat_r=phaseLSSTr[index_notsaturated['ind_notsaturated_r']]
+        magLSST_sat_r=magLSSTr[index_notsaturated['ind_notsaturated_r']]
+
+        phase_sat_i=phaseLSSTi[index_notsaturated['ind_notsaturated_i']]
+        magLSST_sat_i=magLSSTi[index_notsaturated['ind_notsaturated_i']]
+
+        phase_sat_z=phaseLSSTz[index_notsaturated['ind_notsaturated_z']]
+        magLSST_sat_z=magLSSTz[index_notsaturated['ind_notsaturated_z']]
+
+        phase_sat_y=phaseLSSTy[index_notsaturated['ind_notsaturated_y']]
+        magLSST_sat_y=magLSSTy[index_notsaturated['ind_notsaturated_y']]
+
+
+        if len(magLSSTu)!=0:
+            deltau=max(magLSSTu)-min(magLSSTu)
+            meanu=np.mean(magModelu)
+        else:
+            deltau=.1
+            meanu=10
+
+        if len(magLSSTg)!=0:
+            deltag=max(magLSSTg)-min(magLSSTg)
+            meang=np.mean(magModelg)
+        else:
+            deltag=.1
+            meang=10
+
+        if len(magLSSTr)!=0:
+            deltar=max(magLSSTr)-min(magLSSTr)
+            meanr=np.mean(magModelr)
+        else:
+            deltar=.1
+            meanr=10
+
+        if len(magLSSTi)!=0:
+            deltai=max(magLSSTi)-min(magLSSTi)
+            meani=np.mean(magModeli)
+        else:
+            deltai=.1
+            meani=10
+
+        if len(magLSSTz)!=0:
+            deltaz=max(magLSSTz)-min(magLSSTz)
+            meanz=np.mean(magModelz)
+        else:
+            deltaz=.1
+            meanz=10
+
+        if len(magLSSTy)!=0:
+            deltay=max(magLSSTy)-min(magLSSTy)
+            meany=np.mean(magModely)
+        else:
+            deltay=.1
+            meany=10
+
+        deltamax=max([deltau,deltag,deltar,deltai,deltaz,deltay])
+
+
+
+
+
+        fig=plt.figure(figsize=(10,16), dpi=80)
+        plt.subplots_adjust(top = 0.95, bottom = 0.1, right = 0.95
+                            , left = 0.1, hspace = 0.1, wspace = 0.4)
+
+        #fig.suptitle('CEPH2')
+
+
+#        ax2 = plt.subplot2grid((4,2), (0,0),  colspan=2, rowspan=1) # topleft
+#        ax2.set_ylabel('ALLbands (mag)')
+##        ax2.tick_params(axis='both',bottom=True, top=True, left=True, right=True, direction='in',which='major')
+#        ax2.invert_yaxis()
+#        ax2.set_xlim([0,1])
+#        ax2.plot(phaseLSSTu,magLSSTu,'o',color='purple')
+#        ax2.plot(phaseLSSTg,magLSSTg,'o',color='g')
+#        ax2.plot(phaseLSSTr,magLSSTr,'o',color='r')
+#        ax2.plot(phaseLSSTi,magLSSTi,'o',color='k')
+#        ax2.plot(phaseLSSTz,magLSSTz,'o',color='magenta')
+#        ax2.plot(phaseLSSTy,magLSSTy,'o',color='y')
+#        ax2.set_xlabel('phase')
+
+
+        ax3 = plt.subplot2grid((4,3), (0,0),  colspan=1, rowspan=1) # topleft
+        ax3.set_ylabel('u (mag)')
+        ax3.tick_params(axis='both',bottom=True, top=True, left=True, right=True, direction='in',which='major')
+        ax3.invert_yaxis()
+        ax3.set_xlim([0,1])
+        ax3.set_ylim([meanu+0.7*deltamax,meanu-0.7*deltamax])
+        ax3.plot(phaseModelu, magModelu,'.',color='orange')
+        #ax3.plot(phaseLSSTu,magLSSTu,'x',color='black',mfc='none')
+        #ax3.plot(phase_sat_u,magLSST_sat_u,'o',color='b',mfc='b')
+        ax3.plot(phaseLSSTu,magLSSTu,'o',color='b',mfc='b')
+
+
+        ax4 = plt.subplot2grid((4,3), (0,1),  colspan=1, rowspan=1) # topleft
+        ax4.set_ylabel('g (mag)')
+        ax4.tick_params(axis='both',bottom=True, top=True, left=True, right=True, direction='in',which='major')
+        ax4.invert_yaxis()
+        ax4.set_xlim([0,1])
+        ax4.set_ylim([meang+0.7*deltamax,meang-0.7*deltamax])
+        ax4.plot(phaseModelg, magModelg,'.',color='orange')
+        #ax4.plot(phaseLSSTg,magLSSTg,'x',color='black',mfc='none')
+        #ax4.plot(phase_sat_g,magLSST_sat_g,'o',color='g',mfc='g')
+        ax4.plot(phaseLSSTg,magLSSTg,'o',color='g',mfc='g')
+
+        ax5 = plt.subplot2grid((4,3), (0,2),  colspan=1, rowspan=1) # topleft
+        ax5.set_ylabel('r (mag)')
+        ax5.tick_params(axis='both',bottom=True, top=True, left=True, right=True, direction='in',which='major')
+        ax5.invert_yaxis()
+        ax4.set_xlim([0,1])
+        ax5.set_ylim([meanr+0.7*deltamax,meanr-0.7*deltamax])
+        ax5.plot(phaseModelr, magModelr,'.',color='orange')
+        #ax5.plot(phaseLSSTr,magLSSTr,'x',color='black',mfc='none')
+        #ax5.plot(phase_sat_r,magLSST_sat_r,'o',color='r',mfc='r')
+        ax5.plot(phaseLSSTr,magLSSTr,'o',color='r',mfc='r')
+
+        ax6 = plt.subplot2grid((4,3), (1,0),  colspan=1, rowspan=1) # topleft
+        ax6.set_ylabel('i (mag)')
+        ax6.tick_params(axis='both',bottom=True, top=True, left=True, right=True, direction='in',which='major')
+        ax6.invert_yaxis()
+        ax6.set_xlim([0,1])
+        ax6.set_ylim([meani+0.7*deltamax,meani-0.7*deltamax])
+        ax6.set_xlabel('phase')
+        ax6.plot(phaseModeli, magModeli,'.',color='orange')
+        #ax6.plot(phaseLSSTi,magLSSTi,'x',color='black',mfc='none')
+        #ax6.plot(phase_sat_i,magLSST_sat_i,'o',color='purple',mfc='purple')
+        ax6.plot(phaseLSSTi,magLSSTi,'o',color='purple',mfc='purple')
+
+        ax7 = plt.subplot2grid((4,3), (1,1),  colspan=1, rowspan=1) # topleft
+        ax7.set_ylabel('z (mag)')
+        ax7.tick_params(axis='both',bottom=True, top=True, left=True, right=True, direction='in',which='major')
+        ax7.invert_yaxis()
+        ax7.set_xlim([0,1])
+        ax7.set_ylim([meanz+0.7*deltamax,meanz-0.7*deltamax])
+        ax7.set_xlabel('phase')
+        ax7.plot(phaseModelz, magModelz,'.',color='orange')
+        #ax7.plot(phaseLSSTz,magLSSTz,'x',color='black',mfc='none')
+        #ax7.plot(phase_sat_z,magLSST_sat_z,'o',color='y',mfc='y')
+        ax7.plot(phaseLSSTz,magLSSTz,'o',color='y',mfc='y')
+
+        ax8 = plt.subplot2grid((4,3), (1,2),  colspan=1, rowspan=1) # topleft
+        ax8.set_ylabel('y (mag)')
+        ax8.tick_params(axis='both',bottom=True, top=True, left=True, right=True, direction='in',which='major')
+        ax8.invert_yaxis()
+        ax8.set_xlim([0,1])
+        ax8.set_xlabel('phase')
+        ax8.set_ylim([meany+0.7*deltamax,meany-0.7*deltamax])
+        ax8.plot(phaseModely, magModely,'.',color='orange')
+        #ax8.plot(phaseLSSTy,magLSSTy,'x',color='black',mfc='none')
+        #ax8.plot(phase_sat_y,magLSST_sat_y,'o',color='magenta',mfc='magenta')
+        ax8.plot(phaseLSSTy,magLSSTy,'o',color='magenta',mfc='magenta')
+
+
+
+        plt.savefig('plotting_SimulatedLC.pdf')
+    def plotting_SimulatedLC_nonoise(self,phaseModelu,magModelu,phaseModelg,magModelg,
+                  phaseModelr,magModelr,phaseModeli,magModeli,phaseModelz,magModelz,phaseModely,magModely,
+                  phaseLSSTu,magLSSTu,phaseLSSTg,magLSSTg,phaseLSSTr,magLSSTr,
+                  phaseLSSTi,magLSSTi,phaseLSSTz,magLSSTz,phaseLSSTy,magLSSTy,
+                      snru,snrg,snrr,snri,snrz,snry,index_notsaturated):
+
+        phase_sat_u=phaseLSSTu[index_notsaturated['ind_notsaturated_u']]
+        magLSST_sat_u=magLSSTu[index_notsaturated['ind_notsaturated_u']]
+
+        phase_sat_g=phaseLSSTg[index_notsaturated['ind_notsaturated_g']]
+        magLSST_sat_g=magLSSTg[index_notsaturated['ind_notsaturated_g']]
+
+        phase_sat_r=phaseLSSTr[index_notsaturated['ind_notsaturated_r']]
+        magLSST_sat_r=magLSSTr[index_notsaturated['ind_notsaturated_r']]
+
+        phase_sat_i=phaseLSSTi[index_notsaturated['ind_notsaturated_i']]
+        magLSST_sat_i=magLSSTi[index_notsaturated['ind_notsaturated_i']]
+
+        phase_sat_z=phaseLSSTz[index_notsaturated['ind_notsaturated_z']]
+        magLSST_sat_z=magLSSTz[index_notsaturated['ind_notsaturated_z']]
+
+        phase_sat_y=phaseLSSTy[index_notsaturated['ind_notsaturated_y']]
+        magLSST_sat_y=magLSSTy[index_notsaturated['ind_notsaturated_y']]
+
+
+        if len(magLSSTu)!=0:
+            deltau=max(magLSSTu)-min(magLSSTu)
+            meanu=np.mean(magModelu)
+        else:
+            deltau=.1
+            meanu=10
+
+        if len(magLSSTg)!=0:
+            deltag=max(magLSSTg)-min(magLSSTg)
+            meang=np.mean(magModelg)
+        else:
+            deltag=.1
+            meang=10
+
+        if len(magLSSTr)!=0:
+            deltar=max(magLSSTr)-min(magLSSTr)
+            meanr=np.mean(magModelr)
+        else:
+            deltar=.1
+            meanr=10
+
+        if len(magLSSTi)!=0:
+            deltai=max(magLSSTi)-min(magLSSTi)
+            meani=np.mean(magModeli)
+        else:
+            deltai=.1
+            meani=10
+
+        if len(magLSSTz)!=0:
+            deltaz=max(magLSSTz)-min(magLSSTz)
+            meanz=np.mean(magModelz)
+        else:
+            deltaz=.1
+            meanz=10
+
+        if len(magLSSTy)!=0:
+            deltay=max(magLSSTy)-min(magLSSTy)
+            meany=np.mean(magModely)
+        else:
+            deltay=.1
+            meany=10
+
+        deltamax=max([deltau,deltag,deltar,deltai,deltaz,deltay])
+        print(deltamax)
+        print(meanu)
+        print(meang)
+        print(meanr)
+        print(meani)
+        print(meanz)
+        print(meany)
+
+
+
+
+        fig=plt.figure(figsize=(10,16), dpi=80)
+        plt.subplots_adjust(top = 0.95, bottom = 0.1, right = 0.95
+                            , left = 0.1, hspace = 0.1, wspace = 0.4)
+
+        #fig.suptitle('CEPH2')
+
+
+#        ax2 = plt.subplot2grid((4,2), (0,0),  colspan=2, rowspan=1) # topleft
+#        ax2.set_ylabel('ALLbands (mag)')
+##        ax2.tick_params(axis='both',bottom=True, top=True, left=True, right=True, direction='in',which='major')
+#        ax2.invert_yaxis()
+#        ax2.set_xlim([0,1])
+#        ax2.plot(phaseLSSTu,magLSSTu,'o',color='purple')
+#        ax2.plot(phaseLSSTg,magLSSTg,'o',color='g')
+#        ax2.plot(phaseLSSTr,magLSSTr,'o',color='r')
+#        ax2.plot(phaseLSSTi,magLSSTi,'o',color='k')
+#        ax2.plot(phaseLSSTz,magLSSTz,'o',color='magenta')
+#        ax2.plot(phaseLSSTy,magLSSTy,'o',color='y')
+#        ax2.set_xlabel('phase')
+
+
+        ax3 = plt.subplot2grid((4,3), (0,0),  colspan=1, rowspan=1) # topleft
+        ax3.set_ylabel('u (mag)')
+        ax3.tick_params(axis='both',bottom=True, top=True, left=True, right=True, direction='in',which='major')
+        ax3.invert_yaxis()
+        ax3.set_xlim([0,1])
+        ax3.set_ylim([meanu+0.9*deltamax,meanu-0.9*deltamax])
+        ax3.plot(phaseModelu, magModelu,'.',color='gray')
+        ax3.plot(phaseLSSTu,magLSSTu,'o',color='b',mfc='none')
+        ax3.plot(phase_sat_u,magLSST_sat_u,'o',color='b',mfc='b')
+
+
+        ax4 = plt.subplot2grid((4,3), (0,1),  colspan=1, rowspan=1) # topleft
+        ax4.set_ylabel('g (mag)')
+        ax4.tick_params(axis='both',bottom=True, top=True, left=True, right=True, direction='in',which='major')
+        ax4.invert_yaxis()
+        ax4.set_xlim([0,1])
+        ax4.set_ylim([meang+0.9*deltamax,meang-0.9*deltamax])
+        ax4.plot(phaseModelg, magModelg,'.',color='gray')
+        ax4.plot(phaseLSSTg,magLSSTg,'o',color='g',mfc='none')
+        ax4.plot(phase_sat_g,magLSST_sat_g,'o',color='g',mfc='g')
+
+        ax5 = plt.subplot2grid((4,3), (0,2),  colspan=1, rowspan=1) # topleft
+        ax5.set_ylabel('r (mag)')
+        ax5.tick_params(axis='both',bottom=True, top=True, left=True, right=True, direction='in',which='major')
+        ax5.invert_yaxis()
+        ax4.set_xlim([0,1])
+        ax5.set_ylim([meanr+0.9*deltamax,meanr-0.9*deltamax])
+        ax5.plot(phaseModelr, magModelr,'.',color='gray')
+        ax5.plot(phaseLSSTr,magLSSTr,'o',color='r',mfc='none')
+        ax5.plot(phase_sat_r,magLSST_sat_r,'o',color='r',mfc='r')
+
+        ax6 = plt.subplot2grid((4,3), (1,0),  colspan=1, rowspan=1) # topleft
+        ax6.set_ylabel('i (mag)')
+        ax6.tick_params(axis='both',bottom=True, top=True, left=True, right=True, direction='in',which='major')
+        ax6.invert_yaxis()
+        ax6.set_xlim([0,1])
+        ax6.set_ylim([meani+0.9*deltamax,meani-0.9*deltamax])
+        ax6.set_xlabel('phase')
+        ax6.plot(phaseModeli, magModeli,'.',color='gray')
+        ax6.plot(phaseLSSTi,magLSSTi,'o',color='purple',mfc='none')
+        ax6.plot(phase_sat_i,magLSST_sat_i,'o',color='purple',mfc='purple')
+
+        ax7 = plt.subplot2grid((4,3), (1,1),  colspan=1, rowspan=1) # topleft
+        ax7.set_ylabel('z (mag)')
+        ax7.tick_params(axis='both',bottom=True, top=True, left=True, right=True, direction='in',which='major')
+        ax7.invert_yaxis()
+        ax7.set_xlim([0,1])
+        ax7.set_ylim([meanz+0.9*deltamax,meanz-0.9*deltamax])
+        ax7.set_xlabel('phase')
+        ax7.plot(phaseModelz, magModelz,'.',color='gray')
+        ax7.plot(phaseLSSTz,magLSSTz,'o',color='y',mfc='none')
+        ax7.plot(phase_sat_z,magLSST_sat_z,'o',color='y',mfc='y')
+
+        ax8 = plt.subplot2grid((4,3), (1,2),  colspan=1, rowspan=1) # topleft
+        ax8.set_ylabel('y (mag)')
+        ax8.tick_params(axis='both',bottom=True, top=True, left=True, right=True, direction='in',which='major')
+        ax8.invert_yaxis()
+        ax8.set_xlim([0,1])
+        ax8.set_xlabel('phase')
+        ax8.set_ylim([meany+0.9*deltamax,meany-0.9*deltamax])
+        ax8.plot(phaseModely, magModely,'.',color='gray')
+        ax8.plot(phaseLSSTy,magLSSTy,'o',color='magenta',mfc='none')
+        ax8.plot(phase_sat_y,magLSST_sat_y,'o',color='magenta',mfc='magenta')
+
+
+
+        plt.savefig('plotting_SimulatedLC_nonoise.pdf')
+
+
+
+    def LcPeriod_withfigure(self,mv,LcTeoLSST,LcTeoLSST_noised,index_notsaturated):
+        period_model=LcTeoLSST['p_model']
+
+        minper_search=period_model-0.3*period_model
+        maxper_search=period_model+ 0.3*period_model
+
+        minper_opt=period_model-0.5*period_model
+        maxper_opt=period_model+ 0.5*period_model
+
+        periods = np.linspace(minper_opt, maxper_opt,1000)
+
+
+        colors = {'u': 'b','g': 'g','r': 'r',
+                  'i': 'purple',"z": 'y',"y": 'magenta'}
+
+        #Figure with multiband periodograms
+        fig = plt.figure(figsize=(10, 4))
+        gs = plt.GridSpec(5, 2, left=0.07, right=0.95, bottom=0.15,
+                              wspace=0.1, hspace=0.6)
+        ax = [  fig.add_subplot(gs[:, 0]),
+                  fig.add_subplot(gs[:-2, 1]),
+                  fig.add_subplot(gs[-2:, 1])]
+        #n1
+        ax[0].set_xlabel('Phase')
+        ax[0].set_ylabel('Mag')
+        ax[0].invert_yaxis()
+
+        for filterName in mv['filter']:
+            ax[0].scatter(LcTeoLSST['phase'+filterName][index_notsaturated['ind_notsaturated_'+filterName]],
+                          LcTeoLSST_noised['mag'+filterName][index_notsaturated['ind_notsaturated_'+filterName]],
+                          c=colors[filterName], label=filterName)
+        #n2
+        model = periodic.NaiveMultiband(BaseModel=periodic.LombScargleFast)
+        model.fit(LcTeoLSST_noised['time_all'][index_notsaturated['ind_notsaturated_all']],
+                  LcTeoLSST_noised['mag_all'][index_notsaturated['ind_notsaturated_all']],
+                  LcTeoLSST_noised['dmag_all'][index_notsaturated['ind_notsaturated_all']],
+                  np.asarray(mv['filter'][index_notsaturated['ind_notsaturated_all']]))
+        P = model.scores(periods)
+        ax[1].set_xlim(minper_opt, maxper_opt)
+        ax[1].set_title('Standard Periodogram in Each Band', fontsize=12)
+        ax[1].yaxis.set_major_formatter(plt.NullFormatter())
+        ax[1].xaxis.set_major_formatter(plt.NullFormatter())
+        ax[1].set_ylabel('power + offset')
+
+        for i, band in enumerate('ugrizy'):
+            n_temp=len((np.where(mv['filter'][index_notsaturated['ind_notsaturated_all']]== band))[0])
+            if n_temp >= 1:
+                offset = 5 - i
+                ax[1].plot(periods, P[band] + offset, lw=1, c=colors[band])
+                ax[1].text(0.89, 1 + offset, band, fontsize=10, ha='right', va='top')
+
+
+        #n2
+        LS_multi = periodic.LombScargleMultiband(Nterms_base=1, Nterms_band=0)
+        LS_multi.fit(LcTeoLSST_noised['time_all'],LcTeoLSST_noised['mag_all'],LcTeoLSST_noised['dmag_all'], mv['filter'])
+        P_multi = LS_multi.periodogram(periods)
+        periodogram_noise=np.median(P_multi)
+        periodogram_noise_mean=np.mean(P_multi)
+
+        print('Noise level (median vs mean)')
+        print(periodogram_noise,periodogram_noise_mean)
+
+        fitLS_multi= periodic.LombScargleMultiband(fit_period=True)
+        fitLS_multi.optimizer.period_range=(minper_search, maxper_search)
+        fitLS_multi.fit(LcTeoLSST_noised['time_all'],LcTeoLSST_noised['mag_all'],LcTeoLSST_noised['dmag_all'], mv['filter'])
+        best_per_temp=fitLS_multi.best_period
+
+
+        tmin=min(LcTeoLSST_noised['time_all'])
+        tmax=max(LcTeoLSST_noised['time_all'])
+        cicli=(tmax-tmin)/period_model
+
+        diffper=best_per_temp-period_model
+        diffper_abs=abs(best_per_temp-period_model)/period_model*100
+        diffcicli=abs(best_per_temp-period_model)/period_model*1/cicli
+
+
+
+
+        ax[2].plot(periods, P_multi, lw=1, color='gray')
+
+        ax[2].set_title('Multiband Periodogram', fontsize=12)
+        ax[2].set_yticks([0, 0.5, 1.9])
+        ax[2].set_ylim(0, 1.0)
+        ax[2].set_xlim(minper_opt, maxper_opt)
+            #ax[2].set_xlim(period_model-.01, period_model+.01)
+            #ax[2].axvline(fitLS_multi.best_period,color='r');
+        ax[2].axhline(periodogram_noise,color='r');
+        ax[2].yaxis.set_major_formatter(plt.NullFormatter())
+        ax[2].text((minper_opt+maxper_opt)/2.,0.83,'Best Period = %.5f days' % fitLS_multi.best_period,color='r')
+        #ax[2].text((minper_opt+maxper_opt)/2.,0.43,'Noise = %.5f' % periodogram_noise,color='b')
+        ax[2].text((minper_opt+maxper_opt)/2.,0.63,'|$\Delta$P| = %.12f days' % diffper,color='r')
+        ax[2].set_xlabel('Period (days)')
+        ax[2].set_ylabel('power')
+        plt.savefig('plottingPeriodogram.pdf')
+
+
+
+        return best_per_temp,diffper,diffper_abs,diffcicli
+
+
+
+    def plotting(self,data,fittingParameters,period,zeroTimeRef):
+
+        fig=plt.figure(figsize=(10,16), dpi=80)
+        plt.subplots_adjust(top = 0.95, bottom = 0.1, right = 0.95
+                            , left = 0.1, hspace = 0.1, wspace = 0.4)
+
+
+
+        ax1 = plt.subplot2grid((4,3), (0,0)) # topleft
+        ax1.set_ylabel('u (mag)')
+        ax1.tick_params(axis='both',bottom=True, top=True, left=True, right=True, direction='in',which='major')
+        ax1.invert_yaxis()
+        ax1.set_xlim([0,1])
+
+        ax1.plot(((data['timeu']-zeroTimeRef)/period)%1,data['magu'],'o',color='b')
+        if len(fittingParameters['u'])>1:
+            timeForModel=np.arange(data['timeu'][0],data['timeu'][0]+2*period,0.01)
+            magModelForPlot=self.modelToFit(timeForModel,fittingParameters['u'])
+            ax1.plot(((timeForModel-zeroTimeRef)/period)%1,magModelForPlot,'.',color='black')
+
+        ax2 = plt.subplot2grid((4,3), (0,1)) # topleft
+        ax2.set_ylabel('g (mag)')
+        ax2.tick_params(axis='both',bottom=True, top=True, left=True, right=True, direction='in',which='major')
+        ax2.invert_yaxis()
+        ax2.set_xlim([0,1])
+
+        ax2.plot(((data['timeg']-zeroTimeRef)/period)%1,data['magg'],'o',color='g')
+        if len(fittingParameters['g'])>1:
+            timeForModel=np.arange(data['timeg'][0],data['timeg'][0]+2*period,0.01)
+            magModelForPlot=self.modelToFit(timeForModel,fittingParameters['g'])
+            ax2.plot(((timeForModel-zeroTimeRef)/period)%1,magModelForPlot,'.',color='black')
+
+        ax3 = plt.subplot2grid((4,3), (0,2)) # topleft
+        ax3.set_ylabel('r (mag)')
+        ax3.tick_params(axis='both',bottom=True, top=True, left=True, right=True, direction='in',which='major')
+        ax3.invert_yaxis()
+        ax3.set_xlim([0,1])
+
+        ax3.plot(((data['timer']-zeroTimeRef)/period)%1,data['magr'],'o',color='r')
+        if len(fittingParameters['r'])>1:
+            timeForModel=np.arange(data['timer'][0],data['timer'][0]+2*period,0.01)
+            magModelForPlot=self.modelToFit(timeForModel,fittingParameters['r'])
+            ax3.plot(((timeForModel-zeroTimeRef)/period)%1,magModelForPlot,'.',color='black')
+
+        ax4 = plt.subplot2grid((4,3), (1,0)) # topleft
+        ax4.set_ylabel('i (mag)')
+        ax4.tick_params(axis='both',bottom=True, top=True, left=True, right=True, direction='in',which='major')
+        ax4.invert_yaxis()
+        ax4.set_xlim([0,1])
+
+        ax4.plot(((data['timei']-zeroTimeRef)/period) %1,data['magi'],'o',color='purple')
+        if len(fittingParameters['i'])>1:
+            timeForModel=np.arange(data['timei'][0],data['timei'][0]+2*period,0.01)
+            magModelForPlot=self.modelToFit(timeForModel,fittingParameters['i'])
+            ax4.plot(((timeForModel-zeroTimeRef)/period)%1,magModelForPlot,'.',color='black')
+        ax4.set_xlabel('phase')
+
+        ax5 = plt.subplot2grid((4,3), (1,1)) # topleft
+        ax5.set_ylabel('z (mag)')
+        ax5.tick_params(axis='both',bottom=True, top=True, left=True, right=True, direction='in',which='major')
+        ax5.invert_yaxis()
+        ax5.set_xlim([0,1])
+
+        ax5.plot(((data['timez']-zeroTimeRef)/period) %1,data['magz'],'o',color='y')
+        if len(fittingParameters['z'])>1:
+            timeForModel=np.arange(data['timez'][0],data['timez'][0]+2*period,0.01)
+            magModelForPlot=self.modelToFit(timeForModel,fittingParameters['z'])
+            ax5.plot(((timeForModel-zeroTimeRef)/period)%1,magModelForPlot,'.',color='black')
+        ax5.set_xlabel('phase')
+
+        ax6 = plt.subplot2grid((4,3), (1,2)) # topleft
+        ax6.set_ylabel('y (mag)')
+        ax6.tick_params(axis='both',bottom=True, top=True, left=True, right=True, direction='in',which='major')
+        ax6.invert_yaxis()
+        ax6.set_xlim([0,1])
+
+        ax6.plot(((data['timey']-zeroTimeRef)/period) %1,data['magy'],'o',color='magenta')
+        if len(fittingParameters['y'])>1:
+            timeForModel=np.arange(data['timey'][0],data['timey'][0]+2*period,0.01)
+            magModelForPlot=self.modelToFit(timeForModel,fittingParameters['y'])
+            ax6.plot(((timeForModel-zeroTimeRef)/period)%1,magModelForPlot,'.',color='black')
+        ax6.set_xlabel('phase')
+
+        plt.savefig('LcFitting.pdf')
+    def plotting(self,data,fittingParameters,period,zeroTimeRef):
+
+        fig=plt.figure(figsize=(10,16), dpi=80)
+        plt.subplots_adjust(top = 0.95, bottom = 0.1, right = 0.95
+                            , left = 0.1, hspace = 0.1, wspace = 0.4)
+
+
+
+        ax1 = plt.subplot2grid((4,3), (0,0)) # topleft
+        ax1.set_ylabel('u (mag)')
+        ax1.tick_params(axis='both',bottom=True, top=True, left=True, right=True, direction='in',which='major')
+        ax1.invert_yaxis()
+        ax1.set_xlim([0,1])
+        ax1.set_ylim([18.77781925940766+0.7*0.5773290962747808,18.77781925940766-0.7*0.5773290962747808])
+        ax1.plot(((data['timeu']-zeroTimeRef)/period)%1,data['magu'],'o',color='b')
+        if len(fittingParameters['u'])>1:
+            timeForModel=np.arange(data['timeu'][0],data['timeu'][0]+2*period,0.01)
+            magModelForPlot=self.modelToFit(timeForModel,fittingParameters['u'])
+            ax1.plot(((timeForModel-zeroTimeRef)/period)%1,magModelForPlot,'.',color='black')
+
+        ax2 = plt.subplot2grid((4,3), (0,1)) # topleft
+        ax2.set_ylabel('g (mag)')
+        ax2.tick_params(axis='both',bottom=True, top=True, left=True, right=True, direction='in',which='major')
+        ax2.invert_yaxis()
+        ax2.set_xlim([0,1])
+        ax2.set_ylim([17.603732163427885+0.7*0.5773290962747808,17.603732163427885-0.7*0.5773290962747808])
+        ax2.plot(((data['timeg']-zeroTimeRef)/period)%1,data['magg'],'o',color='g')
+        if len(fittingParameters['g'])>1:
+            timeForModel=np.arange(data['timeg'][0],data['timeg'][0]+2*period,0.01)
+            magModelForPlot=self.modelToFit(timeForModel,fittingParameters['g'])
+            ax2.plot(((timeForModel-zeroTimeRef)/period)%1,magModelForPlot,'.',color='black')
+
+        ax3 = plt.subplot2grid((4,3), (0,2)) # topleft
+        ax3.set_ylabel('r (mag)')
+        ax3.tick_params(axis='both',bottom=True, top=True, left=True, right=True, direction='in',which='major')
+        ax3.invert_yaxis()
+        ax3.set_xlim([0,1])
+        ax3.set_ylim([17.851564727594486+0.7*0.5773290962747808,17.851564727594486-0.7*0.5773290962747808])
+        ax3.plot(((data['timer']-zeroTimeRef)/period)%1,data['magr'],'o',color='r')
+        if len(fittingParameters['r'])>1:
+            timeForModel=np.arange(data['timer'][0],data['timer'][0]+2*period,0.01)
+            magModelForPlot=self.modelToFit(timeForModel,fittingParameters['r'])
+            ax3.plot(((timeForModel-zeroTimeRef)/period)%1,magModelForPlot,'.',color='black')
+
+        ax4 = plt.subplot2grid((4,3), (1,0)) # topleft
+        ax4.set_ylabel('i (mag)')
+        ax4.tick_params(axis='both',bottom=True, top=True, left=True, right=True, direction='in',which='major')
+        ax4.invert_yaxis()
+        ax4.set_xlim([0,1])
+        ax4.set_ylim([17.28+0.7*0.5773290962747808,17.28-0.7*0.5773290962747808])
+        ax4.plot(((data['timei']-zeroTimeRef)/period) %1,data['magi'],'o',color='purple')
+        if len(fittingParameters['i'])>1:
+            timeForModel=np.arange(data['timei'][0],data['timei'][0]+2*period,0.01)
+            magModelForPlot=self.modelToFit(timeForModel,fittingParameters['i'])
+            ax4.plot(((timeForModel-zeroTimeRef)/period)%1,magModelForPlot,'.',color='black')
+        ax4.set_xlabel('phase')
+
+        ax5 = plt.subplot2grid((4,3), (1,1)) # topleft
+        ax5.set_ylabel('z (mag)')
+        ax5.tick_params(axis='both',bottom=True, top=True, left=True, right=True, direction='in',which='major')
+        ax5.invert_yaxis()
+        ax5.set_xlim([0,1])
+        ax5.set_ylim([17.25+0.7*0.5773290962747808,17.25-0.7*0.5773290962747808])
+        ax5.plot(((data['timez']-zeroTimeRef)/period) %1,data['magz'],'o',color='y')
+        if len(fittingParameters['z'])>1:
+            timeForModel=np.arange(data['timez'][0],data['timez'][0]+2*period,0.01)
+            magModelForPlot=self.modelToFit(timeForModel,fittingParameters['z'])
+            ax5.plot(((timeForModel-zeroTimeRef)/period)%1,magModelForPlot,'.',color='black')
+        ax5.set_xlabel('phase')
+
+        ax6 = plt.subplot2grid((4,3), (1,2)) # topleft
+        ax6.set_ylabel('y (mag)')
+        ax6.tick_params(axis='both',bottom=True, top=True, left=True, right=True, direction='in',which='major')
+        ax6.invert_yaxis()
+        ax6.set_xlim([0,1])
+        ax6.set_ylim([17.21+0.7*0.5773290962747808,17.21-0.7*0.5773290962747808])
+        ax6.plot(((data['timey']-zeroTimeRef)/period) %1,data['magy'],'o',color='magenta')
+        if len(fittingParameters['y'])>1:
+            timeForModel=np.arange(data['timey'][0],data['timey'][0]+2*period,0.01)
+            magModelForPlot=self.modelToFit(timeForModel,fittingParameters['y'])
+            ax6.plot(((timeForModel-zeroTimeRef)/period)%1,magModelForPlot,'.',color='black')
+        ax6.set_xlabel('phase')
+
+        plt.savefig('LcFitting.pdf')
+
+
+    def outputforplotanal(self,mv,lcModel_noblend):
+        output_metric={'fiveSigmaDepth':mv['fiveSigmaDepth'],'filter':mv['filter'],'meanu_model':lcModel_noblend['meanu'],'meang_model':lcModel_noblend['meang'],'meanr_model':lcModel_noblend['meanr'],'meani_model':lcModel_noblend['meani'],'meanz_model':lcModel_noblend['meanz'],'meany_model':lcModel_noblend['meany']}
+        return output_metric
+
+    def outputforplot(self,uni_meas,best_per_temp,
+                    diffper,diffper_abs,diffcicli,deltamag_u,deltamag_g,deltamag_r,deltamag_i,deltamag_z,
+                    deltamag_y,deltaamp_u,deltaamp_g,deltaamp_r,deltaamp_i,deltaamp_z,deltaamp_y,finalResult,data,index_notsaturated,lcModel_noblend,LcTeoLSST):
+        output_metric={'n_u':uni_meas['n_u'],'n_g':uni_meas['n_g'],'n_r':uni_meas['n_r'],'n_i':uni_meas['n_i'],'n_z':uni_meas['n_z'],'n_y':uni_meas['n_y'],
+                'maxGap_u':uni_meas['maxGap_u'],'maxGap_g':uni_meas['maxGap_g'],'maxGap_r':uni_meas['maxGap_r'],'maxGap_i':uni_meas['maxGap_i'],'maxGap_z':uni_meas['maxGap_z'],'maxGap_y':uni_meas['maxGap_y'],
+                'numberGaps_u':uni_meas['numberGaps_u'],'numberGaps_g':uni_meas['numberGaps_g'],'numberGaps_r':uni_meas['numberGaps_r'],
+                'numberGaps_i':uni_meas['numberGaps_i'],'numberGaps_z':uni_meas['numberGaps_z'],'numberGaps_y':uni_meas['numberGaps_y'],
+                'uniformity_u':uni_meas['uniformity_u'],'uniformity_g':uni_meas['uniformity_g'],'uniformity_r':uni_meas['uniformity_r'],
+                'uniformity_i':uni_meas['uniformity_i'],'uniformity_z':uni_meas['uniformity_z'],'uniformity_y':uni_meas['uniformity_y'],
+                'uniformityKS_u':uni_meas['uniformityKS_u'],'uniformityKS_g':uni_meas['uniformityKS_g'],'uniformityKS_r':uni_meas['uniformityKS_r'],
+                'uniformityKS_i':uni_meas['uniformityKS_i'],'uniformityKS_z':uni_meas['uniformityKS_z'],'uniformityKS_y':uni_meas['uniformityKS_y'],
+                'P_gatpsy':best_per_temp,'Delta_Period':diffper,'Delta_Period_abs':diffper_abs,'Delta_Period_abs_cicli':diffcicli,
+                'deltamag_u':deltamag_u,'deltamag_g':deltamag_g,'deltamag_r':deltamag_r,'deltamag_i':deltamag_i,'deltamag_z':deltamag_z,'deltamag_y':deltamag_y,
+                'deltaamp_u':deltaamp_u, 'deltaamp_g':deltaamp_g,'deltaamp_r':deltaamp_r,'deltaamp_i':deltaamp_i,'deltaamp_z':deltaamp_z,'deltaamp_y':deltaamp_y,
+                'chi_u':finalResult['chi_u'],'chi_g':finalResult['chi_g'],'chi_r':finalResult['chi_r'],'chi_i':finalResult['chi_i'],'chi_z':finalResult['chi_z'],'chi_y':finalResult['chi_y'],'fittingParametersAllband':finalResult['fittingParametersAllband'],'data':data,'index_notsaturated':index_notsaturated,'meanu_model':lcModel_noblend['meanu'],'meang_model':lcModel_noblend['meang'],'meanr_model':lcModel_noblend['meanr'],'meani_model':lcModel_noblend['meani'],'meanz_model':lcModel_noblend['meanz'],'meany_model':lcModel_noblend['meany'],'detlimLSSTu':LcTeoLSST['meandetlimLSSTu'],'detlimLSSTg':LcTeoLSST['meandetlimLSSTg'],'detlimLSSTr':LcTeoLSST['meandetlimLSSTr'],'detlimLSSTi':LcTeoLSST['meandetlimLSSTi'],'detlimLSSTz':LcTeoLSST['meandetlimLSSTz'],'detlimLSSTy':LcTeoLSST['meandetlimLSSTy']}
+        return output_metric
+
+
+    def output_rachel(self,uni_meas,best_per_temp,
+                    diffper,diffper_abs,diffcicli,deltamag_u,deltamag_g,deltamag_r,deltamag_i,deltamag_z,
+                    deltamag_y,deltaamp_u,deltaamp_g,deltaamp_r,deltaamp_i,deltaamp_z,deltaamp_y,finalResult,data,index_notsaturated,lcModel_noblend,LcTeoLSST):
+        output_metric={'n_u':uni_meas['n_u'],'n_g':uni_meas['n_g'],'n_r':uni_meas['n_r'],'n_i':uni_meas['n_i'],'n_z':uni_meas['n_z'],'n_y':uni_meas['n_y'],
+                'maxGap_u':uni_meas['maxGap_u'],'maxGap_g':uni_meas['maxGap_g'],'maxGap_r':uni_meas['maxGap_r'],'maxGap_i':uni_meas['maxGap_i'],'maxGap_z':uni_meas['maxGap_z'],'maxGap_y':uni_meas['maxGap_y'],
+                'numberGaps_u':uni_meas['numberGaps_u'],'numberGaps_g':uni_meas['numberGaps_g'],'numberGaps_r':uni_meas['numberGaps_r'],
+                'numberGaps_i':uni_meas['numberGaps_i'],'numberGaps_z':uni_meas['numberGaps_z'],'numberGaps_y':uni_meas['numberGaps_y'],
+                'uniformity_u':uni_meas['uniformity_u'],'uniformity_g':uni_meas['uniformity_g'],'uniformity_r':uni_meas['uniformity_r'],
+                'uniformity_i':uni_meas['uniformity_i'],'uniformity_z':uni_meas['uniformity_z'],'uniformity_y':uni_meas['uniformity_y'],
+                'uniformityKS_u':uni_meas['uniformityKS_u'],'uniformityKS_g':uni_meas['uniformityKS_g'],'uniformityKS_r':uni_meas['uniformityKS_r'],
+                'uniformityKS_i':uni_meas['uniformityKS_i'],'uniformityKS_z':uni_meas['uniformityKS_z'],'uniformityKS_y':uni_meas['uniformityKS_y'],
+                'P_gatpsy':best_per_temp,'Delta_Period':diffper,'Delta_Period_abs':diffper_abs,'Delta_Period_abs_cicli':diffcicli,
+                'deltamag_u':deltamag_u,'deltamag_g':deltamag_g,'deltamag_r':deltamag_r,'deltamag_i':deltamag_i,'deltamag_z':deltamag_z,'deltamag_y':deltamag_y,
+                'deltaamp_u':deltaamp_u, 'deltaamp_g':deltaamp_g,'deltaamp_r':deltaamp_r,'deltaamp_i':deltaamp_i,'deltaamp_z':deltaamp_z,'deltaamp_y':deltaamp_y}
+        return output_metric
