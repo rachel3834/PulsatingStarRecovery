@@ -215,13 +215,17 @@ class PulsatingStarRecovery(maf.BaseMetric):
         satStacker = SaturationStacker()
         dataSlice = satStacker.run(dataSlice)
 
-
+        # Select observations prior to April 1, 2026 = MJD 61131, i.e. within
+        # two years of the LSST survey start.  This ensures that periodic objects
+        # are identified quickly, allowing them to be characterized, and
+        # distingushed from transients
+        early_obs = np.where(dataSlice[self.mjdCol] < 61131)
 
 
         #here we build -mv- that will be used in our metrics to build the simulated light curve:
-        mv={'observationStartMJD':dataSlice[self.mjdCol],'fiveSigmaDepth':dataSlice[self.fiveSigmaDepth],
-            'filter':dataSlice[self.filters], 'visitExposureTime':dataSlice[self.visitExposureTime],'night':dataSlice[self.night],
-            'numExposures':dataSlice[self.numExposures],'skyBrightness':dataSlice[self.skyBrightness], 'seeingFwhmEff':dataSlice[self.seeing], 'airmass':dataSlice[self.airmass],'saturation_mag':dataSlice['saturation_mag']}
+        mv={'observationStartMJD':dataSlice[early_obs][self.mjdCol],'fiveSigmaDepth':dataSlice[early_obs][self.fiveSigmaDepth],
+            'filter':dataSlice[early_obs][self.filters], 'visitExposureTime':dataSlice[early_obs][self.visitExposureTime],'night':dataSlice[early_obs][self.night],
+            'numExposures':dataSlice[early_obs][self.numExposures],'skyBrightness':dataSlice[early_obs][self.skyBrightness], 'seeingFwhmEff':dataSlice[early_obs][self.seeing], 'airmass':dataSlice[early_obs][self.airmass],'saturation_mag':dataSlice[early_obs]['saturation_mag']}
 
 
         #define time_lsst as array and filter
