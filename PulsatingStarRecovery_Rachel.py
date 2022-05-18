@@ -220,7 +220,8 @@ class PulsatingStarRecovery(maf.BaseMetric):
         # are identified quickly, allowing them to be characterized, and
         # distingushed from transients
         early_obs = np.where(dataSlice[self.mjdCol] < 61131)
-
+        if len(early_obs) < 5:
+            return output_null_metric
 
         #here we build -mv- that will be used in our metrics to build the simulated light curve:
         mv={'observationStartMJD':dataSlice[early_obs][self.mjdCol],'fiveSigmaDepth':dataSlice[early_obs][self.fiveSigmaDepth],
